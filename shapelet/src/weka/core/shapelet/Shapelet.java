@@ -16,14 +16,17 @@ import java.util.TreeMap;
 		public double informationGain;
 		public double separationGap;
 		private double gainRatio;
+		public int granularity;
 
 		
 		//Constructors
-		public Shapelet(double[] content, int seriesId, int startPos) {
+		public Shapelet(double[] content, int seriesId, int startPos, int granularity) {
 			this.setContent(content);
 			this.setSeriesId(seriesId);
 			this.setStartPos(startPos);
+			this.setGranularity(granularity);
 		}
+
 
 		public Shapelet(double[] content, int seriesId, int startPos,
 				double splitThreshold, double gain, double gap) {
@@ -98,7 +101,14 @@ import java.util.TreeMap;
 		public int getLength(){
 			return content.length;
 		}
+
+		private void setGranularity(int granularity) {
+			this.granularity = granularity;
+		}
 		
+		public int getGranularity(){
+			return this.granularity;
+		}
 
 		/*
 		 * Compute Information Gain
@@ -376,8 +386,7 @@ import java.util.TreeMap;
 
 		
 
-		// comparison to determine order of shapelets in terms of info gain,
-		// then separation gap, then shortness
+		// comparison to determine order of shapelets in terms of gain ration then shortness
 		public int compareTo(Shapelet shapelet) {
 			final int BEFORE = -1;
 			final int EQUAL = 0;
@@ -389,7 +398,7 @@ import java.util.TreeMap;
 				} else {
 					return AFTER;
 				}
-			} else {// if this.informationGain == shapelet.informationGain
+			} else {// if this.GainRatio == shapelet.GainRatio
 					if (this.content.length != shapelet.getLength()) {
 						if (this.content.length < shapelet.getLength()) {
 						return BEFORE;
@@ -400,7 +409,7 @@ import java.util.TreeMap;
 					return EQUAL;
 				}
 			}
-
+			
 		}
 	
 	}

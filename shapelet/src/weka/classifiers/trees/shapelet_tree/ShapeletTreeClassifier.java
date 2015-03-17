@@ -35,13 +35,13 @@ public class ShapeletTreeClassifier extends Classifier {
 		this.maxLength = maxLength;
 	}
 
-	public void buildClassifier(Instances data) throws Exception {
+	public void buildClassifier(Instances dataset) throws Exception {
 		if (minLength < 1 || maxLength < 1) {
 			throw new Exception(
 					"Shapelet minimum or maximum length is incorrectly specified!");
 		}
 
-		root.trainShapeletTree(data, minLength, maxLength, 0);
+		root.trainShapeletTree(dataset, minLength, maxLength, 0);
 	}
 
 	public double classifyInstance(Instance instance) {
@@ -67,13 +67,12 @@ public class ShapeletTreeClassifier extends Classifier {
 		public void trainShapeletTree(Instances data, int minShapeletLength,
 				int maxShapeletLength, int level) throws Exception {
 			FileWriter fw = new FileWriter(logFileName, true);
-			fw.append("level:" + level + ", numInstances:"
-					+ data.numInstances() + "\n");
+			fw.append("level:" + level + "," + data.numInstances() + "\n");	
 			fw.close();
 
 			//----------------------------------------------------------------------------------//
 			// 1. check whether this is a leaf node with only one class present - base case
-		/*	double firstClassValue = data.instance(0).classValue();
+			double firstClassValue = data.instance(0).classValue();
 			boolean oneClass = true;
 			for (int i = 1; i < data.numInstances(); i++) {
 				if (data.instance(i).classValue() != firstClassValue) {
@@ -90,13 +89,13 @@ public class ShapeletTreeClassifier extends Classifier {
 			
 			//----------------------------------------------------------------------------------//					
 			} else { 
-				try {*/
+				try {
 					// 2. find the best shapelet to split the data
 					fw = new FileWriter(logFileName, true);
 					fw.append("--> 1.Find the best shapelet to split the data!");
 					fw.close();
 	
-					this.shapelet = findBestShapelet(data,
+					this.shapelet = findBestShapelet (data,
 							minShapeletLength, maxShapeletLength);
 					
 					fw = new FileWriter(logFileName, true);
@@ -105,16 +104,13 @@ public class ShapeletTreeClassifier extends Classifier {
 					fw.append("Information Gain:"+ shapelet.getInformationGain());
 					fw.append("length:"+ shapelet.getLength());
 					fw.close();
-				/*} catch (Exception e) {
-					System.out.println("Problem initialising tree node: " + e);
-					e.printStackTrace();
-				}*/
-			}
+
+			
 		
 		
 
 			//----------------------------------------------------------------------------------//	
-				/*	// 3. split the data using the shapelet and create new data sets
+					// 3. split the data using the shapelet and create new data sets
 					double dist;
 					ArrayList<Instance> splitLeft = new ArrayList<Instance>();
 					ArrayList<Instance> splitRight = new ArrayList<Instance>();
@@ -196,7 +192,7 @@ public class ShapeletTreeClassifier extends Classifier {
 					e.printStackTrace();
 				}
 			}
-		}*/
+		}
 
 		public double classifyInstance(Instance instance) {
 			if (this.leftNode == null) {
@@ -263,8 +259,7 @@ public class ShapeletTreeClassifier extends Classifier {
 			int seriesId, int startPos, TreeMap<Double, Integer> classDistribution) {
 
 		// create orderline by looping through data set and calculating the
-		// subsequence
-		// distance from candidate to all data, inserting in order.
+		// subsequence distance from candidate to all data, inserting in order.
 		ArrayList<OrderLineObj> orderline = new ArrayList<OrderLineObj>();
 
 		
@@ -296,9 +291,8 @@ public class ShapeletTreeClassifier extends Classifier {
 		}*/
 		
 		// create a shapelet object to store all necessary info, i.e.
-		// content, seriesId, then calc info gain, split threshold and separation
-		// gap
-		Shapelet shapelet = new Shapelet(candidate, seriesId, startPos);
+		// content, seriesId, then calc info gain, split threshold 
+		Shapelet shapelet = new Shapelet(candidate, seriesId, startPos,0);
 		//shapelet.calcInfoGainAndThreshold(orderline, classDistribution);
 		shapelet.calcGainRatioAndThreshold(orderline, classDistribution);
 
@@ -451,6 +445,7 @@ public class ShapeletTreeClassifier extends Classifier {
 		}
 		return classDistribution;
 	}
+
 
 	
 	
