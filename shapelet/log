@@ -1,2 +1,21 @@
-level:0, numInstances:28
+level:0,Num of Instances from 0 dataset:5
+Num of Instances from 1 dataset:3
 --> 1.Find the best shapelet to split the data!
+Shapelet Found!
+Gain Ratio:0.6379740263133316
+Information Gain:0.9709505944546687
+length:280
+Found in dataset: 0
+-->2. split the data using the shapelet and create new data sets-->2. split the data using the shapelet and create new data setsleft size under level 0: 2
+left size under level 0: 1
+level:1,Num of Instances from 0 dataset:2
+Num of Instances from 1 dataset:1
+FOUND LEAF --> class decision here: 1.0
+In dataset number: 0FOUND LEAF --> class decision here: 1.0
+In dataset number: 1right size under level 0: 3
+right size under level 0: 2
+level:1,Num of Instances from 0 dataset:3
+Num of Instances from 1 dataset:2
+FOUND LEAF --> class decision here: 0.0
+In dataset number: 0FOUND LEAF --> class decision here: 0.0
+In dataset number: 1

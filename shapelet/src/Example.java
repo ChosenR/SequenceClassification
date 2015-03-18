@@ -17,15 +17,15 @@ public class Example {
 			Instances train=null, test=null, discretized=null;
 			FileReader r;
 			try{		
-				r= new FileReader("Coffee_TRAIN.arff"); 
+				r= new FileReader("Coffee_TRAIN1.arff"); 
 				train = new Instances(r); 
 				train.setClassIndex(0);
-				//r = new FileReader("Coffee_Discretized.arff"); 
-			    //discretized = new Instances(r);
-				//discretized.setClassIndex(0);
-				r = new FileReader("Coffee_TEST.arff"); 
-			    test = new Instances(r);
-				test.setClassIndex(0);
+				r = new FileReader("Coffee_TEST1.arff"); 
+			    discretized = new Instances(r);
+				discretized.setClassIndex(0);
+				//r = new FileReader("Coffee_TEST.arff"); 
+			   // test = new Instances(r);
+				//test.setClassIndex(0);
 	                        
 			}
 			catch(Exception e)
@@ -36,13 +36,14 @@ public class Example {
 			
 			ArrayList<Instances> datasets = new ArrayList<Instances>();
 			datasets.add(train);
-			datasets.add(test);
+			datasets.add(discretized);
+	
 
 		
 					
 			//Create ShapeletTreeClassifier
 			ShapeletTreeClassifierModified shapeletTree = new ShapeletTreeClassifierModified("log");
-			shapeletTree.setShapeletMinMaxLength(10,286);
+			shapeletTree.setShapeletMinMaxLength(280,286);
 			shapeletTree.buildClassifier(datasets);
 			
 			/*Evaluation eval = new Evaluation(train);

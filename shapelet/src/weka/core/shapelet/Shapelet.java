@@ -285,6 +285,7 @@ import java.util.TreeMap;
 			}
 			if (bsfGainR >= 0) {
 				this.setGainRatio(bsfGainR);
+				this.setSplitThreshold(threshold);
 			}
 			if (bsfGain >= 0) {
 				this.setInformationGain(bsfGain);
