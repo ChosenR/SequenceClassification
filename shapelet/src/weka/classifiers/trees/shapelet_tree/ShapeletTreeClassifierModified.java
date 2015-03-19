@@ -1,6 +1,7 @@
 package weka.classifiers.trees.shapelet_tree;
 
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -17,13 +18,13 @@ public class ShapeletTreeClassifierModified extends Classifier {
 
 	private static final long serialVersionUID = 1L;
 	private ShapeletNode root;
-	private String logFileName;
+	private static String logFileName;
 	private int minLength, maxLength;
 
 	// constructors
 	public ShapeletTreeClassifierModified(String logFileName) throws Exception {
 		this.root = new ShapeletNode();
-		this.logFileName = logFileName;
+		ShapeletTreeClassifierModified.logFileName = logFileName;
 		minLength = maxLength = 0;
 		FileWriter fw = new FileWriter(logFileName);
 		fw.close();
@@ -68,7 +69,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 				throws Exception {
 
 			FileWriter fw = new FileWriter(logFileName, true);
-			fw.append("level:" + level + ",");
+			fw.append("level:" + level + "," + "\n");
 			for (int i = 0; i < datasets.size(); i++) {
 				fw.append("Num of Instances from " + i + " dataset:"
 						+ datasets.get(i).numInstances() + "\n");
@@ -89,28 +90,35 @@ public class ShapeletTreeClassifierModified extends Classifier {
 			boolean baseCase = false;
 			double firstClassValue = -1.0;
 
+			System.out.println("*****Check if this node is in base case.");
 			for (int j = 0; j < datasets.size(); j++) {
-				
-				System.out.println("*****Check base case in dataset: " + j);
-				firstClassValue = datasets.get(j).instance(0).classValue();
-				oneClass = true;
-				for (int i = 1; i < datasets.get(j).numInstances(); i++) {
-					if (datasets.get(j).instance(i).classValue() != firstClassValue) {
-						oneClass = false;
-						break;
+				if (datasets.get(j).numInstances() > 0){
+					System.out.println("Dataset: " + j);
+					for(int x=0; x<datasets.get(j).numInstances(); x++){
+						System.out.println(datasets.get(j).instance(x).classValue());
+					}
+					firstClassValue = datasets.get(j).instance(0).classValue();
+					oneClass = true;
+					for (int i = 1; i < datasets.get(j).numInstances(); i++) {
+						if (datasets.get(j).instance(i).classValue() != firstClassValue) {
+							oneClass = false;
+							break;
+						}
+					}
+
+					if (oneClass == true) {
+						baseCase = true;
+						this.classDecision = firstClassValue; // no need to find shapelet, base  case
+						System.out.println("Found Leaf! Class decision: "+ firstClassValue);
+						fw = new FileWriter(logFileName, true);
+						fw.append("FOUND LEAF --> class decision here: "
+								+ firstClassValue + "\n" + "In dataset number: "
+								+ j);
+						fw.close();
+						//break;
 					}
 				}
-
-				if (oneClass == true) {
-					baseCase = true;
-					this.classDecision = firstClassValue; // no need to find shapelet, base  case
-					System.out.println("Found Leaf! Class decision: "+ firstClassValue);
-					fw = new FileWriter(logFileName, true);
-					fw.append("FOUND LEAF --> class decision here: "
-							+ firstClassValue + "\n" + "In dataset number: "
-							+ j);
-					fw.close();
-				}
+				
 
 			}
 
@@ -127,16 +135,9 @@ public class ShapeletTreeClassifierModified extends Classifier {
 
 					this.shapelet = findBestShapelet(datasets,
 							minShapeletLength, maxShapeletLength);
-
-					fw = new FileWriter(logFileName, true);
-					fw.append("Shapelet Found!" + "\n");
-					fw.append("Gain Ratio:" + shapelet.getGainRatio() + "\n");
-					fw.append("Information Gain:"
-							+ shapelet.getInformationGain() + "\n");
-					fw.append("length:" + shapelet.getLength() + "\n");
-					fw.append("Found in "  + "dataset: " + shapelet.granularity + "\n");
-					fw.close();
-
+					System.out.println("Best Shapelet");
+					printShapelet(this.shapelet);
+					System.out.println("SplitThres: " + this.shapelet.splitThreshold);
 					// ----------------------------------------------------------------------------------//
 					// 3. split the data in every dataset using the shapelet and
 					// create new data sets
@@ -154,10 +155,12 @@ public class ShapeletTreeClassifierModified extends Classifier {
 						
 						// find the corresponding shapelet with different granularity
 						if(shapelet.granularity != z){
+							System.out.println("Not in the same granularity!");
 							the_shapelet = findCorrespondingShapelet(shapelet,z,datasets);
 						}
 						else{
 							the_shapelet = this.shapelet; 
+							System.out.println("Can use this shapelet to divide!");
 						}
 						
 						
@@ -209,7 +212,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 							}
 							rightInstancesAggr.add(rightInstances);
 						
-						
+					
 						
 					}
 		
@@ -244,7 +247,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 		//TO DO: find the corresponding shapelet. 
 		//Find the same shapelet but with different granularity, bellonging to another dataset
 		
-		private Shapelet findCorrespondingShapelet(Shapelet shapelet, int granularity, ArrayList<Instances> datasets) {
+		private Shapelet findCorrespondingShapelet(Shapelet shapelet, int granularity, ArrayList<Instances> datasets) throws IOException {
 			
 			TreeMap<Double, Integer> classDistribution = getClassDistributions(datasets
 					.get(granularity)); // used to compute gain ratio
@@ -263,8 +266,11 @@ public class ShapeletTreeClassifierModified extends Classifier {
 			Shapelet newShapelet = checkCandidate(newContent, datasets.get(granularity), shapelet.seriesId, shapelet.startPos,
 					classDistribution, granularity);
 			
-			//printShapelet(shapelet);
-			//printShapelet(newShapelet);
+			System.out.println("The Shapelet");
+			printShapelet(shapelet);
+			
+			System.out.println("The corresponding Shapelet");
+			printShapelet(newShapelet);
 
 			
 			return newShapelet;
@@ -289,21 +295,12 @@ public class ShapeletTreeClassifierModified extends Classifier {
 		}
 	}
 
-	/*
-	 * // write to file here!!!! fw = new FileWriter(logFileName, true);
-	 * fw.append("seriesId, startPos, length, infoGain, splitThresh\n");
-	 * fw.append(this.shapelet.getSeriesId() + "," + this.shapelet.getStartPos()
-	 * + "," + this.shapelet.getContent().length + "," +
-	 * this.shapelet.getInformationGain() + "," +
-	 * this.shapelet.getSplitThreshold() + "\n");
-	 * fw.append(this.shapelet.getContent().toString()); fw.append("\n");
-	 * fw.close();
-	 * 
-	 * System.out.println("shapelet completed at:" + System.nanoTime());
-	 */
+
+	
+	
 
 	private Shapelet findBestShapelet(ArrayList<Instances> datasets,
-			int minShapeletLength, int maxShapeletLength) {
+			int minShapeletLength, int maxShapeletLength) throws IOException {
 
 		Shapelet bestShapelet = null;
 
@@ -339,14 +336,17 @@ public class ShapeletTreeClassifierModified extends Classifier {
 						}
 
 						candidate = zNorm(candidate, false);
+						//System.out.println("CheckCandidate: " + j);
 						Shapelet candidateShapelet = checkCandidate(candidate,
 								datasets.get(j), i, start, classDistributions,
 								j);
+						
+						//appendShapelet(candidateShapelet);
 
 						if (bestShapelet == null
 								|| candidateShapelet.compareTo(bestShapelet) < 0) {
 							bestShapelet = candidateShapelet;
-							printShapelet(bestShapelet);
+
 						}
 					}
 				}
@@ -357,7 +357,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 
 	private static Shapelet checkCandidate(double[] candidate, Instances data,
 			int seriesId, int startPos,
-			TreeMap<Double, Integer> classDistribution, int granularity) {
+			TreeMap<Double, Integer> classDistribution, int granularity) throws IOException {
 
 		// create orderline by looping through data set and calculating the
 		// subsequence distance from candidate to all data, inserting in order.
@@ -388,11 +388,8 @@ public class ShapeletTreeClassifierModified extends Classifier {
 			}
 		}
 
-		/*
-		 * for(int x =0; x<orderline.size();x++){
-		 * System.out.println(orderline.get(x).getDistance() + "-->" +
-		 * orderline.get(x).getClassVal()); }
-		 */
+		appendOrderLine(orderline);
+
 
 		// create a shapelet object to store all necessary info, i.e.
 		// content, seriesId, then calc info gain, split threshold
@@ -515,15 +512,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 		return output;
 	}
 
-	public static String getTime() {
-		Calendar calendar = new GregorianCalendar();
-		return calendar.get(Calendar.DAY_OF_MONTH) + "/"
-				+ calendar.get(Calendar.MONTH) + "/"
-				+ calendar.get(Calendar.YEAR) + " - "
-				+ calendar.get(Calendar.HOUR_OF_DAY) + ":"
-				+ calendar.get(Calendar.MINUTE) + ":"
-				+ calendar.get(Calendar.SECOND) + " AM";
-	}
+
 
 	private static TreeMap<Double, Integer> getClassDistributions(Instances data) {
 		TreeMap<Double, Integer> classDistribution = new TreeMap<Double, Integer>();
@@ -552,15 +541,62 @@ public class ShapeletTreeClassifierModified extends Classifier {
 
 	}
 
+	
+	
+	/*
+	 * Auxiliar Functions
+	 */
+	
+	public static String getTime() {
+		Calendar calendar = new GregorianCalendar();
+		return calendar.get(Calendar.DAY_OF_MONTH) + "/"
+				+ calendar.get(Calendar.MONTH) + "/"
+				+ calendar.get(Calendar.YEAR) + " - "
+				+ calendar.get(Calendar.HOUR_OF_DAY) + ":"
+				+ calendar.get(Calendar.MINUTE) + ":"
+				+ calendar.get(Calendar.SECOND) + " AM";
+	}
+	
+	
 	public void printShapelet(Shapelet shapelet){
-		System.out.println("Shapelet Found!----------------------");
+		System.out.println("----------------------");
 		System.out.println("Gain Ratio:" + shapelet.getGainRatio());
 		System.out.println("Information Gain:" + shapelet.getInformationGain() );
+		System.out.println("Split Info:" + shapelet.getSplitInfo() );
 		System.out.println("SplitPoint:" + shapelet.splitThreshold );
 		System.out.println("length:" + shapelet.getLength() );
 		System.out.println("SeriesId: " + shapelet.getSeriesId() );
 		System.out.println("startPosition: " + shapelet.getStartPos() );
 		System.out.println("Found in dataset: " + shapelet.granularity);
 		System.out.println("--------------------------------------");
+	}
+	
+	public void appendShapelet(Shapelet shapelet) throws IOException{
+		FileWriter fw = new FileWriter(logFileName, true);
+		fw.append("----------------- + \n");
+		fw.append("SeriesID: "  + shapelet.getSeriesId() + "," + "\n"+ 
+				  "StartPos: "  + shapelet.getStartPos() + "," + "\n"+
+				  "Lenght: "    + shapelet.getContent().length + "," + "\n"+
+				  "GainRatio: " + shapelet.getGainRatio() + "," + "\n"+
+				  "InfoGain: "  + shapelet.getInformationGain() + "," + "\n"+
+				  "SplitInfo: " + shapelet.getSplitInfo() + "," + "\n" +
+				  "Threshold: " + shapelet.splitThreshold + "," + "\n"+
+				  "DataSet: " 	+ shapelet.granularity + "," + "\n");
+		fw.close();
+	}
+	
+	
+	public static void appendOrderLine(ArrayList<OrderLineObj> orderline) throws IOException{
+		 
+		FileWriter fw = new FileWriter(logFileName, true);
+		fw.append("---->OrderLine<---- + \n");
+		
+		for(int x =0; x<orderline.size();x++)
+		  {
+			  fw.append(orderline.get(x).getDistance() + "-->" +
+					  orderline.get(x).getClassVal() + "\n");
+			}
+		 
+		fw.close();
 	}
 }

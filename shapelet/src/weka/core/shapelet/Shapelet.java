@@ -1,5 +1,8 @@
-    package weka.core.shapelet;
+   package weka.core.shapelet;
 
+
+
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
@@ -13,6 +16,7 @@ import java.util.TreeMap;
 		public int seriesId;
 		public int startPos;
 		public double splitThreshold;
+		public double splitInfo;
 		public double informationGain;
 		public double separationGap;
 		private double gainRatio;
@@ -27,16 +31,6 @@ import java.util.TreeMap;
 			this.setGranularity(granularity);
 		}
 
-
-		public Shapelet(double[] content, int seriesId, int startPos,
-				double splitThreshold, double gain, double gap) {
-			this.setContent(content);
-			this.setSeriesId(seriesId);
-			this.setStartPos(startPos);
-			this.setSplitThreshold(splitThreshold);
-			this.setInformationGain(gain);
-			this.setSeparationGap(gap) ;
-		}
 
 
 		//Getters and Setters
@@ -109,7 +103,14 @@ import java.util.TreeMap;
 		public int getGranularity(){
 			return this.granularity;
 		}
+		
+		public double getSplitInfo(){
+			return this.splitInfo;
+		}
 
+		public void setSplitInfo(double splitInfo){
+			this.splitInfo = splitInfo;
+		}
 		/*
 		 * Compute Information Gain
 		 * 1 - For each threshold (starting between 0 and 1 and ending between end-1 and end
@@ -127,6 +128,7 @@ import java.util.TreeMap;
 			double threshold = -1;
 
 			for (int i = 1; i < orderline.size(); i++) {
+	
 				thisDist = orderline.get(i).getDistance();
 				if (i == 1 || thisDist != lastDist) { // check that threshold has moved
 
@@ -178,8 +180,9 @@ import java.util.TreeMap;
 							- greaterFrac * entropyGreater;
 
 					if (gain > bsfGain) {
-						bsfGain = gain;
+						bsfGain = gain;				
 						threshold = (thisDist - lastDist) / 2 + lastDist;
+	
 					}
 				}
 				lastDist = thisDist;
@@ -191,6 +194,8 @@ import java.util.TreeMap;
 		}
 		
 		
+		
+
 		
 
 		/*
@@ -209,10 +214,9 @@ import java.util.TreeMap;
 			double thisDist = -1;
 			double bsfGainR = -1;
 			double bsfGain = -1;
-			@SuppressWarnings("unused")
 			double threshold = -1;
 			double Infogain = 0;
-
+			double splitInfoValue = -1.0;
 			for (int i = 1; i < orderline.size(); i++) {
 				thisDist = orderline.get(i).getDistance();
 				if (i == 1 || thisDist != lastDist) { // check that threshold has moved
@@ -251,31 +255,31 @@ import java.util.TreeMap;
 							+ sumOfGreaterClasses;
 
 					double parentEntropy = entropy(classDistribution);
-
-					// calculate the info gain below the threshold
+						// calculate the info gain below the threshold
 					double lessFrac = (double) sumOfLessClasses
 							/ sumOfAllClasses;
 					double entropyLess = entropy(lessClasses);
+
+					
 					// calculate the info gain above the threshold
 					double greaterFrac = (double) sumOfGreaterClasses
 							/ sumOfAllClasses;
 					double entropyGreater = entropy(greaterClasses);
-
+	
 					Infogain = parentEntropy - lessFrac * entropyLess
 							- greaterFrac * entropyGreater;
 
-
-					double splitInfo = splitInfo(orderline);
-						
 					
-					gainRatio = Infogain/splitInfo;
-	
+					splitInfoValue = splitInfo(orderline);
+					
+					gainRatio = Infogain/splitInfoValue;
+					
 					
 					
 					if (gainRatio > bsfGainR) {
 						bsfGainR = gainRatio;
 						threshold = (thisDist - lastDist) / 2 + lastDist;
-					}
+						}
 					
 					if (Infogain > bsfGain) {
 						bsfGain = Infogain;
@@ -286,6 +290,7 @@ import java.util.TreeMap;
 			if (bsfGainR >= 0) {
 				this.setGainRatio(bsfGainR);
 				this.setSplitThreshold(threshold);
+				this.setSplitInfo(splitInfoValue);
 			}
 			if (bsfGain >= 0) {
 				this.setInformationGain(bsfGain);
@@ -295,6 +300,7 @@ import java.util.TreeMap;
 	
 	
 	
+
 
 	//Compute SplitInfo
 	public double splitInfo(ArrayList<OrderLineObj> orderline){
@@ -412,5 +418,7 @@ import java.util.TreeMap;
 			}
 			
 		}
+	
+
 	
 	}
