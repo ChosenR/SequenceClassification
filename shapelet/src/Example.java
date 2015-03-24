@@ -28,9 +28,9 @@ public class Example {
 						r = new FileReader("Coffee_D10.arff"); 
 					    discretized = new Instances(r);
 						discretized.setClassIndex(0);
-						//r = new FileReader("Coffee_TEST.arff"); 
-					   // test = new Instances(r);
-						//test.setClassIndex(0);
+						r = new FileReader("Coffee_TEST.arff"); 
+					    test = new Instances(r);
+						test.setClassIndex(0);
 			                        
 					}
 					catch(Exception e)
@@ -47,7 +47,7 @@ public class Example {
 						
 					//Create ShapeletTreeClassifier
 					ShapeletTreeClassifierModified shapeletTree = new ShapeletTreeClassifierModified("log");
-					shapeletTree.setShapeletMinMaxLength(285,285);
+					shapeletTree.setShapeletMinMaxLength(5,5);
 					shapeletTree.buildClassifier(datasets);
 					
 					/*Evaluation eval = new Evaluation(train);
@@ -55,9 +55,9 @@ public class Example {
 					System.out.println(eval.toSummaryString("\nResults\n======\n", false));*/
 					
 					//Evaluation
-			/*		Evaluation eval = new Evaluation(train);
+					Evaluation eval = new Evaluation(train);
 					eval.evaluateModel(shapeletTree, test);
-					System.out.println(eval.toSummaryString("\nResults\n======\n", false));*/
+					System.out.println(eval.toSummaryString("\nResults\n======\n", false));
 					
 			
 			 }

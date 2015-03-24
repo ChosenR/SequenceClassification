@@ -83,46 +83,33 @@ public class ShapeletTreeClassifierModified extends Classifier {
 			// ----------------------------------------------------------------------------------//
 			// 1. check whether this is a leaf node with only one class present
 			// - base case
-			// MODIFICATION - We need to check every dataset in that node
-			// (different levels of granularity)
+			// MODIFICATION - Each node has different datasets, but all of them hold the same instances but in different granularities
 			// If one of them has only one class present - base case
 			boolean oneClass = true;
-			boolean baseCase = false;
 			double firstClassValue = -1.0;
 
 			System.out.println("*****Check if this node is in base case.");
-			for (int j = 0; j < datasets.size(); j++) {
-				if (datasets.get(j).numInstances() > 0){
-					System.out.println("Dataset: " + j);
-					for(int x=0; x<datasets.get(j).numInstances(); x++){
-						System.out.println(datasets.get(j).instance(x).classValue());
-					}
-					firstClassValue = datasets.get(j).instance(0).classValue();
-					oneClass = true;
-					for (int i = 1; i < datasets.get(j).numInstances(); i++) {
-						if (datasets.get(j).instance(i).classValue() != firstClassValue) {
-							oneClass = false;
-							break;
-						}
-					}
-
-					if (oneClass == true) {
-						baseCase = true;
-						this.classDecision = firstClassValue; // no need to find shapelet, base  case
-						System.out.println("Found Leaf! Class decision: "+ firstClassValue);
-						fw = new FileWriter(logFileName, true);
-						fw.append("FOUND LEAF --> class decision here: "
-								+ firstClassValue + "\n" + "In dataset number: "
-								+ j);
-						fw.close();
-						//break;
-					}
+			firstClassValue = datasets.get(0).instance(0).classValue();
+			oneClass = true;
+			for (int i = 1; i < datasets.get(0).numInstances(); i++) {
+				if (datasets.get(0).instance(i).classValue() != firstClassValue) {
+					oneClass = false;
+					break;
 				}
-				
-
 			}
 
-			if (baseCase == false) {
+			if (oneClass == true) {
+				this.classDecision = firstClassValue; // no need to find shapelet, base  case
+				System.out.println("Found Leaf! Class decision: " + firstClassValue);
+				fw = new FileWriter(logFileName, true);
+				fw.append("FOUND LEAF --> class decision here: "
+						+ firstClassValue + "\n" );
+				fw.close();
+			}
+
+
+
+			else {
 
 				// ----------------------------------------------------------------------------------//
 
@@ -137,38 +124,48 @@ public class ShapeletTreeClassifierModified extends Classifier {
 							minShapeletLength, maxShapeletLength);
 					System.out.println("Best Shapelet");
 					printShapelet(this.shapelet);
-					System.out.println("SplitThres: " + this.shapelet.splitThreshold);
+
 					// ----------------------------------------------------------------------------------//
 					// 3. split the data in every dataset using the shapelet and
 					// create new data sets
 
 					ArrayList<Instances> leftInstancesAggr = new ArrayList<Instances>();
 					ArrayList<Instances> rightInstancesAggr = new ArrayList<Instances>();
+					
 					leftNode = new ShapeletNode();
 					rightNode = new ShapeletNode();
 
 					Shapelet the_shapelet = null;
 					
+					// Find the dataset with the same granularity as the shapelet.
+					// Then, compute the subsequence distance and check if it goes to left or right node
+					// Finally, move the corresponding instances with different granularity to the same side.
 					for (int z = 0; z < datasets.size(); z++) {
 						
-						System.out.println("--------Split dataset :" + z);
+						System.out.println("Split dataset :" + z);
 						
 						// find the corresponding shapelet with different granularity
-						if(shapelet.granularity != z){
-							System.out.println("Not in the same granularity!");
-							the_shapelet = findCorrespondingShapelet(shapelet,z,datasets);
-						}
-						else{
-							the_shapelet = this.shapelet; 
-							System.out.println("Can use this shapelet to divide!");
-						}
+						if(shapelet.granularity == z){
+						the_shapelet = this.shapelet; 
+						System.out.println("Can use this shapelet to divide!");
+						
 						
 						
 
-						double dist;
-						ArrayList<Instance> splitLeft = new ArrayList<Instance>();
-						ArrayList<Instance> splitRight = new ArrayList<Instance>();
-						
+						double dist;											
+						ArrayList<ArrayList<Instance>> leftSplit = new ArrayList<ArrayList<Instance>>(datasets.size());
+						ArrayList<ArrayList<Instance>> rightSplit = new ArrayList<ArrayList<Instance>>(datasets.size());
+					    
+						//init the structures
+					    for(int i=0; i<datasets.size();i++){
+					    	ArrayList<Instance> l = new ArrayList<Instance>();  
+					    	ArrayList<Instance> r = new ArrayList<Instance>();  
+							leftSplit.add(l);
+							rightSplit.add(r);
+					    }
+					    
+					    
+					    
 					    fw = new FileWriter(logFileName, true);
 						fw.append("-->2. split the data using the shapelet and create new data sets");
 						fw.close();
@@ -177,15 +174,23 @@ public class ShapeletTreeClassifierModified extends Classifier {
 							dist = subsequenceDistance( the_shapelet.getContent(), datasets.get(z).instance(i).toDoubleArray());
 							System.out.println("dist:" + dist);
 							if (dist < the_shapelet.getSplitThreshold()) {
-								splitLeft.add(datasets.get(z).instance(i));
+								
+								//That specific instance in all granularities is going to the left node
+								for(int x=0; x<datasets.size();x++){
+									leftSplit.get(x).add(datasets.get(x).instance(i));									
+								}
 								System.out.println("gone left");
+								
 							} else {
-								splitRight.add(datasets.get(z).instance(i));
+								//That specific instance in all granularities is going to the left node
+								for(int x=0; x<datasets.size();x++){
+									rightSplit.get(x).add(datasets.get(x).instance(i));									
+								}
 								System.out.println("gone right");
 							}
 						}
-						System.out.println("leftSize:" + splitLeft.size());
-						System.out.println("rightSize:" + splitRight.size());
+						System.out.println("leftSize:" + leftSplit.get(z).size());	
+						System.out.println("rightSize:" + rightSplit.get(z).size());
 
 						// ----------------------------------------------------------------------------------//
 
@@ -196,24 +201,23 @@ public class ShapeletTreeClassifierModified extends Classifier {
 						// MODIFICATION - Now each node can hold more than one
 						// set of instances, depending of the number of
 						// granularities
-
-
-							Instances leftInstances = new Instances(
-									datasets.get(z), splitLeft.size());
-							for (int i = 0; i < splitLeft.size(); i++) {
-								leftInstances.add(splitLeft.get(i));
-							}
-							leftInstancesAggr.add(leftInstances);
-
-							Instances rightInstances = new Instances(
-									datasets.get(z), splitRight.size());
-							for (int i = 0; i < splitRight.size(); i++) {
-								rightInstances.add(splitRight.get(i));
-							}
-							rightInstancesAggr.add(rightInstances);
-						
 					
+							for(int v=0; v<leftSplit.size();v++){
+								Instances l = new Instances(datasets.get(v), leftSplit.get(v).size());
+								for (int i = 0; i < leftSplit.get(v).size(); i++) {
+									l.add(leftSplit.get(v).get(i));
+								}
+								leftInstancesAggr.add(l);				
+							}					
 						
+							for(int v=0; v<rightSplit.size();v++){
+								Instances r = new Instances(datasets.get(v), rightSplit.get(v).size());
+								for (int i = 0; i < rightSplit.get(v).size(); i++) {
+									r.add(rightSplit.get(v).get(i));
+								}
+								rightInstancesAggr.add(r);				
+							}
+					}
 					}
 		
 
@@ -247,7 +251,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 		//TO DO: find the corresponding shapelet. 
 		//Find the same shapelet but with different granularity, bellonging to another dataset
 		
-		private Shapelet findCorrespondingShapelet(Shapelet shapelet, int granularity, ArrayList<Instances> datasets) throws IOException {
+		/*private Shapelet findCorrespondingShapelet(Shapelet shapelet, int granularity, ArrayList<Instances> datasets) throws IOException {
 			
 			TreeMap<Double, Integer> classDistribution = getClassDistributions(datasets
 					.get(granularity)); // used to compute gain ratio
@@ -274,7 +278,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 
 			
 			return newShapelet;
-			}
+			}*/
 
 		
 		//TO DO: Modify this function to take into account the different granularities 
