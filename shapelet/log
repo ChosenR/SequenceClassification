@@ -1,7 +1,48 @@
 level:0,
 Num of Instances from 0 dataset:4
 Num of Instances from 1 dataset:4
+Num of Instances from 2 dataset:4
 --> 1.Find the best shapelet to split the data!
+---->OrderLine<---- + 
+0.0-->0.0
+0.0-->1.0
+4.930380657631324E-32-->0.0
+3.9999999999999987-->1.0
+---->OrderLine<---- + 
+0.0-->0.0
+0.0-->1.0
+4.930380657631324E-32-->0.0
+3.9999999999999987-->1.0
+---->OrderLine<---- + 
+0.0-->0.0
+4.930380657631324E-32-->0.0
+4.930380657631324E-32-->1.0
+3.9999999999999996-->1.0
+---->OrderLine<---- + 
+0.0-->1.0
+3.9999999999999987-->0.0
+3.9999999999999987-->1.0
+3.9999999999999996-->0.0
+---->OrderLine<---- + 
+0.0-->0.0
+0.020263947211730585-->1.0
+0.0383177261713582-->0.0
+3.979736052788269-->1.0
+---->OrderLine<---- + 
+0.0-->1.0
+0.020263947211730585-->0.0
+0.11351556343240282-->0.0
+3.9999999999999996-->1.0
+---->OrderLine<---- + 
+0.0-->0.0
+0.0383177261713582-->0.0
+0.11351556343240282-->1.0
+3.8864844365675975-->1.0
+---->OrderLine<---- + 
+0.0-->1.0
+3.8864844365675975-->0.0
+3.979736052788269-->0.0
+3.9999999999999996-->1.0
 ---->OrderLine<---- + 
 0.0-->0.0
 7.709816533847221E-4-->0.0
@@ -22,35 +63,19 @@ Num of Instances from 1 dataset:4
 7.942952705827762E-4-->0.0
 0.0013588917528761253-->0.0
 0.002557573589351273-->1.0
----->OrderLine<---- + 
-0.0-->0.0
-8.874685183736383E-32-->1.0
-0.02026394721173059-->0.0
-NaN-->1.0
----->OrderLine<---- + 
-0.0-->1.0
-8.874685183736383E-32-->0.0
-0.020263947211730585-->0.0
-NaN-->1.0
----->OrderLine<---- + 
-0.0-->0.0
-0.020263947211730585-->1.0
-0.02026394721173059-->0.0
-NaN-->1.0
----->OrderLine<---- + 
-NaN-->0.0
-NaN-->1.0
-NaN-->0.0
-NaN-->1.0
 -->2. split the data using the shapelet and create new data setsleft size under level 0: 2
+left size under level 0: 2
 left size under level 0: 2
 level:1,
 Num of Instances from 0 dataset:2
 Num of Instances from 1 dataset:2
+Num of Instances from 2 dataset:2
 FOUND LEAF --> class decision here: 0.0
+right size under level 0: 2
 right size under level 0: 2
 right size under level 0: 2
 level:1,
 Num of Instances from 0 dataset:2
 Num of Instances from 1 dataset:2
+Num of Instances from 2 dataset:2
 FOUND LEAF --> class decision here: 1.0

@@ -1,0 +1,16 @@
+@relation Coffee
+
+@attribute class {0,1}
+@attribute a1 numeric
+@attribute a2 numeric
+@attribute a3 numeric
+@attribute a4 numeric
+@attribute a5 numeric
+
+
+@data
+0,13.6007,14.2786,14.3907,13.6154,13.0037
+1,15.051,15.8535,16.0783,16.0067,15.128,
+0,11.3785,11.6504,11.6436,11.1123,10.4013
+1,9.10625,9.2431,9.30546,9.13074,8.70905
+
