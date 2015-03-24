@@ -1,5 +1,6 @@
 package weka.classifiers.trees.shapelet_tree;
 
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
@@ -10,6 +11,7 @@ import java.util.TreeMap;
 
 import weka.classifiers.Classifier;
 import weka.core.Instance;
+import weka.core.InstanceComparator;
 import weka.core.Instances;
 import weka.core.shapelet.Shapelet;
 import weka.core.shapelet.OrderLineObj;
@@ -44,7 +46,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 		root.trainShapeletTree(datasets, minLength, maxLength, 0);
 	}
 
-	public double classifyInstance(Instance instance) {
+	public double classifyInstance(Instance instance) throws Exception {
 		return root.classifyInstance(instance);
 	}
 
@@ -282,10 +284,18 @@ public class ShapeletTreeClassifierModified extends Classifier {
 
 		
 		//TO DO: Modify this function to take into account the different granularities 
-		public double classifyInstance(Instance instance) {
+		public double classifyInstance(Instance instance) throws Exception {
+			//System.out.println("Test this instance: " +instance);
 			if (this.leftNode == null) {
+
 				return this.classDecision;
 			} else {
+			
+				int numBinsTestInstance = Integer.parseInt(instance.dataset().relationName());
+				if(shapelet.getNumBins() != numBinsTestInstance){
+					Instance i = discretize(instance, shapelet.getNumBins());
+				}
+			
 				double distance;
 				distance = subsequenceDistance(this.shapelet.getContent(),
 						instance, false);
@@ -297,6 +307,43 @@ public class ShapeletTreeClassifierModified extends Classifier {
 				}
 			}
 		}
+
+		
+		//All testing instances are already descritized before, and we just need to find the corresponding one.
+		private Instance discretize(Instance instance, int numBins)
+				throws Exception {
+		
+			InstanceComparator comp = new InstanceComparator(false);
+			Instances testDescritized=null;
+			FileReader r;
+			
+			Instances c = instance.dataset();
+			int i=0;
+			// find the number of the test instance in the dataset
+			for ( i = 0; i < c.numInstances(); i++) {
+				if (comp.compare(instance, c.instance(i)) == 0) {
+					break;
+				}
+
+			}
+
+			try{		
+				r= new FileReader("" + numBins + ".arff"); 
+				testDescritized = new Instances(r); 
+				testDescritized.setClassIndex(0);
+			}catch(Exception e)
+			{
+				System.out.println("Unable to load data. Exception thrown ="+e);
+				System.exit(0);
+			}
+			
+			
+			
+			
+			return testDescritized.instance(i);
+		}
+		
+		
 	}
 
 
@@ -343,7 +390,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 						//System.out.println("CheckCandidate: " + j);
 						Shapelet candidateShapelet = checkCandidate(candidate,
 								datasets.get(j), i, start, classDistributions,
-								j);
+								j, datasets.get(j).relationName());
 						
 						//appendShapelet(candidateShapelet);
 
@@ -361,7 +408,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 
 	private static Shapelet checkCandidate(double[] candidate, Instances data,
 			int seriesId, int startPos,
-			TreeMap<Double, Integer> classDistribution, int granularity) throws IOException {
+			TreeMap<Double, Integer> classDistribution, int granularity, String numBins) throws IOException {
 
 		// create orderline by looping through data set and calculating the
 		// subsequence distance from candidate to all data, inserting in order.
@@ -393,12 +440,12 @@ public class ShapeletTreeClassifierModified extends Classifier {
 		}
 
 		appendOrderLine(orderline);
-
+		int nBins =Integer.parseInt(numBins);
 
 		// create a shapelet object to store all necessary info, i.e.
 		// content, seriesId, then calc info gain, split threshold
 		Shapelet shapelet = new Shapelet(candidate, seriesId, startPos,
-				granularity);
+				granularity, nBins);
 		shapelet.calcGainRatioAndThreshold(orderline, classDistribution);
 
 		return shapelet;

@@ -1,4 +1,4 @@
-   package weka.core.shapelet;
+package weka.core.shapelet;
 
 
 
@@ -21,15 +21,20 @@ import java.util.TreeMap;
 		public double separationGap;
 		private double gainRatio;
 		public int granularity;
+		public int numBins;
 
 		
 		//Constructors
-		public Shapelet(double[] content, int seriesId, int startPos, int granularity) {
+		public Shapelet(double[] content, int seriesId, int startPos, int granularity, int numBins) {
 			this.setContent(content);
 			this.setSeriesId(seriesId);
 			this.setStartPos(startPos);
 			this.setGranularity(granularity);
+			this.setnumBins(numBins);
 		}
+
+
+
 
 
 
@@ -111,6 +116,17 @@ import java.util.TreeMap;
 		public void setSplitInfo(double splitInfo){
 			this.splitInfo = splitInfo;
 		}
+		
+		public void setnumBins(int numBins) {
+			this.numBins=numBins;
+			
+		}
+
+		public int getNumBins(){
+			return this.numBins;
+		}
+		
+		
 		/*
 		 * Compute Information Gain
 		 * 1 - For each threshold (starting between 0 and 1 and ending between end-1 and end
@@ -399,12 +415,18 @@ import java.util.TreeMap;
 			final int EQUAL = 0;
 			final int AFTER = 1;
 
-			if (this.getGainRatio() != shapelet.getGainRatio()) {
+			/*if (this.getGainRatio() != shapelet.getGainRatio()) {
 				if (this.getGainRatio() > shapelet.getGainRatio()) {
 					return BEFORE;
 				} else {
 					return AFTER;
-				}
+				}*/
+			if (this.getInformationGain() != shapelet.getInformationGain()) {
+			if (this.getInformationGain() > shapelet.getInformationGain()) {
+				return BEFORE;
+			} else {
+				return AFTER;
+			}
 			} else {// if this.GainRatio == shapelet.GainRatio
 					if (this.content.length != shapelet.getLength()) {
 						if (this.content.length < shapelet.getLength()) {
@@ -421,4 +443,5 @@ import java.util.TreeMap;
 	
 
 	
+
 	}
