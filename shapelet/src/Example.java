@@ -19,19 +19,24 @@ import weka.filters.unsupervised.attribute.Discretize;
 public class Example {
 	
 
-	 public static void main(String[] args) throws Exception{
-		 int difAggr = 2;
-			int numBins=10;
+	public static void main(String[] args) throws Exception{
+		 int difAggr = 1;
+		 int numBins=13;
+		 int numTrainInstances=20;
+		 int numMax=641;
 		    //Read and create train and test Instances
-					Instances train=null, test=null, discretized=null;
+					Instances train=null, test=null, all=null;
 					FileReader r;
 					try{		
-						r= new FileReader("Coffee_TRAIN.arff"); 
+						r= new FileReader("Sony_TRAIN.arff"); 
 						train = new Instances(r); 
 						train.setClassIndex(0);
-						r = new FileReader("Coffee_TEST.arff"); 
+						r = new FileReader("Sony_TEST.arff"); 
 					    test = new Instances(r);
 						test.setClassIndex(0);
+						r = new FileReader("Sony_ALL.arff"); 
+					    all = new Instances(r);
+						all.setClassIndex(0);
 			                        
 					}
 					catch(Exception e)
@@ -42,19 +47,67 @@ public class Example {
 					
 					
 					
-				
-					
+
 					
 					ArrayList<Instances> datasets = new ArrayList<Instances>();
-					
+					datasets.add(train);
 
 			//Assuming thar the training dataset is not discretized yet!
 			train.setRelationName("0");
 			test.setRelationName("0");
+			all.setRelationName("0");
+			System.out.println(all.numInstances());
+			
+			for(int x=0; x<difAggr;x++){
+				//Discretize the dataset together!
+				Instances dis = all;
+				dis.setClassIndex(0);
+				Discretize d = new Discretize();
+				d.setInputFormat(dis);
+				d.setBins(numBins);
+				Instances output = Filter.useFilter(dis, d);
+				output.setRelationName(""+numBins);
+				save(output, "" + output.relationName() + "Aggr" + numBins);
+				
+				//Split the training and testing datasets already discretized
+				int j=0;
+				Instances train1 = new Instances(output, output.numInstances());
+				for (j = 0; j < numTrainInstances; j++) {
+					train1.add(output.instance(j));
+				}
+	
+				train1.setRelationName(""+numBins);
+				save(train1, "Train" + numBins);
+				datasets.add(train1);
+				
+				Instances test1 = new Instances(output, output.numInstances());
+				for(int i=numTrainInstances;i<numMax;i++){
+					test1.add(output.instance(i));
+				}
+				
+				test1.setRelationName(""+numBins);
+				save(test1, "" + numBins);
+				
+				
+				numBins +=1;
+			}
+			
+		
+			
+			
+			
+			
+			
+			
+				
+								
 					
-				//Discretize the training dataset into different aggregarions
+			
+					
+			/*	//Discretize the training dataset into different aggregarions
 				for(int i=0; i< difAggr; i++){
 					Instances inputTrain = train;
+					inputTrain.setClassIndex(0);
 					Discretize d = new Discretize();
 					d.setInputFormat(inputTrain);
 					d.setBins(numBins);
@@ -64,11 +117,9 @@ public class Example {
 					datasets.add(outputTrain);
 					numBins +=5;
 				}
+					
 				
-
-				datasets.add(train);
-				
-				numBins=10;
+				numBins=5;
 				// TO DO: Use the same intervals as in the trainingset. DOn't know how to do it yet.
 				//Discretize the testing dataset with the same aggregarions
 				for(int i=0; i< difAggr; i++){
@@ -82,10 +133,10 @@ public class Example {
 					numBins +=5;
 				}
 						
-				
+				datasets.add(train);*/
 				//Create ShapeletTreeClassifier
 				ShapeletTreeClassifierModified shapeletTree = new ShapeletTreeClassifierModified("log");
-				shapeletTree.setShapeletMinMaxLength(285,285);
+				shapeletTree.setShapeletMinMaxLength(5,70);
 				shapeletTree.buildClassifier(datasets);
 					
 					/*Evaluation eval = new Evaluation(train);
@@ -96,7 +147,7 @@ public class Example {
 					Evaluation eval = new Evaluation(train);
 					eval.evaluateModel(shapeletTree, test);
 					System.out.println(eval.toSummaryString("\nResults\n======\n", false));
-					
+					System.out.println(eval.toMatrixString());
 			
 			 }
 	 

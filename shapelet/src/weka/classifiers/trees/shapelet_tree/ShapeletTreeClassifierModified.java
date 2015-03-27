@@ -91,6 +91,10 @@ public class ShapeletTreeClassifierModified extends Classifier {
 			double firstClassValue = -1.0;
 
 			System.out.println("*****Check if this node is in base case.");
+			if(datasets.get(0).numInstances()==0){
+				return;
+			}
+			
 			firstClassValue = datasets.get(0).instance(0).classValue();
 			oneClass = true;
 			for (int i = 1; i < datasets.get(0).numInstances(); i++) {
@@ -109,7 +113,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 				fw.close();
 			}
 
-
+			
 
 			else {
 
@@ -250,62 +254,46 @@ public class ShapeletTreeClassifierModified extends Classifier {
 		}
 
 		
-		//TO DO: find the corresponding shapelet. 
-		//Find the same shapelet but with different granularity, bellonging to another dataset
-		
-		/*private Shapelet findCorrespondingShapelet(Shapelet shapelet, int granularity, ArrayList<Instances> datasets) throws IOException {
-			
-			TreeMap<Double, Integer> classDistribution = getClassDistributions(datasets
-					.get(granularity)); // used to compute gain ratio
-		
-			
-			
-			double[] wholeInstance = datasets.get(granularity).instance(shapelet.seriesId).toDoubleArray();
-			double[] newContent = new double[shapelet.content.length];
-			
-			for (int m = shapelet.startPos; m < shapelet.startPos+ shapelet.content.length; m++) {
-				newContent[m - shapelet.startPos] = wholeInstance[m];
-			}
-
-			newContent = zNorm(newContent, false);
-			
-			Shapelet newShapelet = checkCandidate(newContent, datasets.get(granularity), shapelet.seriesId, shapelet.startPos,
-					classDistribution, granularity);
-			
-			System.out.println("The Shapelet");
-			printShapelet(shapelet);
-			
-			System.out.println("The corresponding Shapelet");
-			printShapelet(newShapelet);
-
-			
-			return newShapelet;
-			}*/
+	
 
 		
 		//TO DO: Modify this function to take into account the different granularities 
 		public double classifyInstance(Instance instance) throws Exception {
+			FileWriter fw = new FileWriter("classification", true);
 			//System.out.println("Test this instance: " +instance);
+			Instance this_instance = instance;
 			if (this.leftNode == null) {
-
+				fw.close();
 				return this.classDecision;
 			} else {
 			
 				int numBinsTestInstance = Integer.parseInt(instance.dataset().relationName());
 				if(shapelet.getNumBins() != numBinsTestInstance){
-					Instance i = discretize(instance, shapelet.getNumBins());
+					fw.append("Need to descritize!" + "shapelet: " + shapelet.getNumBins() + "Instance: " + numBinsTestInstance + "\n");
+					fw.append("Instance Before D: " + instance + "\n");
+					this_instance = discretize(instance, shapelet.getNumBins());
+					fw.append("Instance After D: " + this_instance + "\n");
+					fw.append("Shapelet: " + this.shapelet.getContent()+"\n");
+
 				}
 			
 				double distance;
 				distance = subsequenceDistance(this.shapelet.getContent(),
 						instance, false);
+				fw.append("Distance Between them: " + distance + "\n");
 
 				if (distance < this.shapelet.getSplitThreshold()) {
-					return leftNode.classifyInstance(instance);
+					fw.append("left");
+					fw.close();
+					return leftNode.classifyInstance(this_instance);
 				} else {
-					return rightNode.classifyInstance(instance);
+					fw.append("right");
+					fw.close();
+					return rightNode.classifyInstance(this_instance);
 				}
+				
 			}
+			
 		}
 
 		
@@ -318,6 +306,7 @@ public class ShapeletTreeClassifierModified extends Classifier {
 			FileReader r;
 			
 			Instances c = instance.dataset();
+			System.out.println(c.numInstances());
 			int i=0;
 			// find the number of the test instance in the dataset
 			for ( i = 0; i < c.numInstances(); i++) {
@@ -326,11 +315,12 @@ public class ShapeletTreeClassifierModified extends Classifier {
 				}
 
 			}
-
+System.out.println(i);
 			try{		
 				r= new FileReader("" + numBins + ".arff"); 
 				testDescritized = new Instances(r); 
 				testDescritized.setClassIndex(0);
+				System.out.println(testDescritized.numInstances());
 			}catch(Exception e)
 			{
 				System.out.println("Unable to load data. Exception thrown ="+e);
@@ -439,15 +429,15 @@ public class ShapeletTreeClassifierModified extends Classifier {
 			}
 		}
 
-		appendOrderLine(orderline);
+		//appendOrderLine(orderline);
 		int nBins =Integer.parseInt(numBins);
 
 		// create a shapelet object to store all necessary info, i.e.
 		// content, seriesId, then calc info gain, split threshold
 		Shapelet shapelet = new Shapelet(candidate, seriesId, startPos,
 				granularity, nBins);
-		shapelet.calcGainRatioAndThreshold(orderline, classDistribution);
-
+		//shapelet.calcGainRatioAndThreshold(orderline, classDistribution);
+		shapelet.calcInfoGainAndThreshold(orderline, classDistribution);
 		return shapelet;
 	}
 
